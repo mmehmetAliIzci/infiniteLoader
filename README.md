@@ -1,7 +1,4 @@
-# Problem:
-
-
-# Infinite Loader Assignment
+# Infinite Loader React Component
 
 ## Initial Thoughts
 I began by creating a list component to handle both the fetching and rendering of the data. But then i realized that the component should be generic, able to render anything thrown at it. So, i've implemented generics as types
