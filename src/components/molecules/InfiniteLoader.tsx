@@ -1,72 +1,73 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { throttle } from "../../helpers/throttle/throttle";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+} from "react";
+import { debounce } from "../../helpers/debounce";
 
 interface InfiniteLoaderProps<T> {
-  fetchData: (page: number) => Promise<T[]>;
+  fetchNextPage: () => Promise<T[]>;
   renderItem: (item: T) => React.ReactNode;
-  throttleTime?: number;
+  debounceTime?: number;
   containerHeight?: string;
   loaderHeight?: string;
-  initialPage?: number;
 }
 
 const InfiniteLoader = <T,>({
-  fetchData,
+  fetchNextPage,
   renderItem,
   containerHeight = "500px",
   loaderHeight = "50px",
-  throttleTime = 500,
-  initialPage = 1,
+  debounceTime = 500,
 }: InfiniteLoaderProps<T>) => {
   const [data, setData] = useState<T[]>([]);
-  const [page, setPage] = useState(initialPage);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setIsError] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const loaderRef = useRef(null);
 
-  const fetchThrottled = throttle(async () => {
+  const fetchDebounced = debounce(async () => {
     try {
-      const newData = await fetchData(page);
+      const newData = await fetchNextPage();
+      if (newData.length === 0) {
+        setHasMore(false);
+      }
       setData((prevData) => [...prevData, ...newData]);
-      setPage(page + 1);
       setIsLoading(false);
     } catch (error) {
       setIsError(true);
       console.warn(error);
     }
-  }, throttleTime);
+  }, debounceTime);
 
-  const loadMore = () => {
+  const loadMore = useCallback(() => {
     if (isLoading) return;
     setIsLoading(true);
-    fetchThrottled();
-  };
-
-  const throttledLoadMore = useCallback(loadMore, [
-    page,
-    isLoading,
-    fetchData,
-    fetchThrottled,
-  ]);
+    fetchDebounced();
+  }, [isLoading, fetchNextPage, fetchDebounced]);
 
   useEffect(() => {
     const currentLoaderRef = loaderRef.current;
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          throttledLoadMore();
-        }
-      },
-      {
-        root: null,
-        rootMargin: "0px",
-        threshold: 1.0,
+    const observerCallback = ([entry]: IntersectionObserverEntry[]) => {
+      console.log("Observer callback fired", entry); // Debug line
+
+      if (entry.isIntersecting) {
+        loadMore();
       }
-    );
+    };
+
+    const observer = new IntersectionObserver(observerCallback, {
+      root: null,
+      rootMargin: "0px",
+      threshold: 0.5,
+    });
 
     if (currentLoaderRef) {
       observer.observe(currentLoaderRef);
+      console.log("Observer set"); // Debug line
     }
 
     return () => {
@@ -74,15 +75,25 @@ const InfiniteLoader = <T,>({
         observer.unobserve(currentLoaderRef);
       }
     };
-  }, [throttledLoadMore]);
+  }, []);
+
+  const memoizedItem = useMemo(() => renderItem, [renderItem]);
 
   return (
     <div style={{ height: containerHeight, overflow: "auto" }}>
       {data.map((item, index) => (
-        <div key={index}>{renderItem(item)}</div>
+        <div key={index}>{memoizedItem(item)}</div>
       ))}
-      {isLoading && <div>Loading...</div>}
-      {error && <div>Something wrong fetching characters...</div>}
+      {hasMore ? (
+        <>
+          {isLoading && <div>Loading...</div>}
+          {error && <div>Something wrong loading more...</div>}
+          <button onClick={loadMore}>Load More</button>
+        </>
+      ) : (
+        <div>You've reached the end of the internet</div>
+      )}
+
       <div
         ref={loaderRef}
         style={{ height: loaderHeight, backgroundColor: "transparent" }}
