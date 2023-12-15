@@ -25,14 +25,8 @@ The infinite loader was developed as a technical challenge. It required creating
 - **Generic Data Handling**: Capable of interfacing with any paginated API.
 - **Dynamic Content Rendering**: Flexibility to render any type of content.
 - **Performance Optimization**: Utilizes debouncing and the Intersection Observer API for efficient data loading.
-- **Responsive and User-Friendly**: Adapts to various screen sizes and user interactions.
 
 ## Thought Process and Development Strategy
-
-### Building a Generic and Flexible Component
-
-- Started with a basic list component but quickly shifted to a more generic approach using TypeScript generics.
-- Implemented `fetchData` and `renderItem` functions as parameters, allowing the component to be used in various contexts.
 
 ### Performance and User Experience
 
@@ -73,4 +67,4 @@ During my journey, I realized that the Intersection Observer API isn't 100% reli
 
 ## Initial Completion Date and Duration Spent
 
-[Month and Year] - Approximately [X hours] spent
+Aug 2023 - Approximately 10 spent
