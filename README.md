@@ -67,4 +67,4 @@ During my journey, I realized that the Intersection Observer API isn't 100% reli
 
 ## Initial Completion Date and Duration Spent
 
-Aug 2023 - Approximately 10 spent
+Aug 2023 - 10h+ spent
